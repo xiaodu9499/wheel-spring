@@ -6,7 +6,7 @@ package org.wspring.chapter2.model;
  * @author ducf
  * @create 2019-03-05 上午 11:19
  */
-public class Cuostmer {
+public class Customer {
 
     /*id*/
     private long id;
@@ -71,7 +71,7 @@ public class Cuostmer {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("Cuostmer{");
+        final StringBuilder sb = new StringBuilder("Customer{");
         sb.append("id=").append(id);
         sb.append(", name='").append(name).append('\'');
         sb.append(", contact='").append(contact).append('\'');
