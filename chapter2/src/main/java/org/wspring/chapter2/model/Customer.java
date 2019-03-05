@@ -15,7 +15,7 @@ public class Customer {
     /*联系人*/
     private String contact;
     /*电话号码*/
-    private String telePhone;
+    private String telephone;
     /*邮箱*/
     private String email;
     /*备注*/
@@ -45,12 +45,12 @@ public class Customer {
         this.contact = contact;
     }
 
-    public String getTelePhone() {
-        return telePhone;
+    public String getTelephone() {
+        return telephone;
     }
 
-    public void setTelePhone(String telePhone) {
-        this.telePhone = telePhone;
+    public void setTelephone(String telephone) {
+        this.telephone = telephone;
     }
 
     public String getEmail() {
@@ -75,7 +75,7 @@ public class Customer {
         sb.append("id=").append(id);
         sb.append(", name='").append(name).append('\'');
         sb.append(", contact='").append(contact).append('\'');
-        sb.append(", telePhone='").append(telePhone).append('\'');
+        sb.append(", telephone='").append(telephone).append('\'');
         sb.append(", email='").append(email).append('\'');
         sb.append(", remark='").append(remark).append('\'');
         sb.append('}');

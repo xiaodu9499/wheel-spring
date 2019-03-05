@@ -1,5 +1,6 @@
 package org.wspring.chapter2.helper;
 
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
@@ -9,8 +10,11 @@ import org.slf4j.LoggerFactory;
 import org.wspring.chapter2.util.CollectionUtil;
 import org.wspring.chapter2.util.PropsUtil;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,9 +28,11 @@ import java.util.Properties;
  * @create 2019-03-05 下午 1:51
  */
 public class DatabaseHelper {
-    private static final Logger log = LoggerFactory.getLogger(DatabaseHelper.class);
-    private static final QueryRunner QUERY_RUNNER = new QueryRunner();
-    private static final ThreadLocal<Connection> CONNECTION_HOLDER = new ThreadLocal<Connection>();
+    private static final Logger log;
+    private static final QueryRunner QUERY_RUNNER;
+    private static final ThreadLocal<Connection> CONNECTION_HOLDER;
+    private static final BasicDataSource DATA_SOURCE;
+
 
     private static final String DRIVER;
     private static final String URL;
@@ -34,16 +40,22 @@ public class DatabaseHelper {
     private static final String PASSWORD;
 
     static {
+        log = LoggerFactory.getLogger(DatabaseHelper.class);
+        QUERY_RUNNER = new QueryRunner();
+        CONNECTION_HOLDER = new ThreadLocal<Connection>();
+
         Properties props = PropsUtil.loadProps("config.properties");
         DRIVER = PropsUtil.getString(props, "jdbc.driver");
         URL = PropsUtil.getString(props, "jdbc.url");
         USERNAME = PropsUtil.getString(props, "jdbc.username");
         PASSWORD = PropsUtil.getString(props, "jdbc.password");
-        try {
-            Class.forName(DRIVER);
-        } catch (ClassNotFoundException e) {
-            log.error("加载jdbc驱动异常", e);
-        }
+
+        DATA_SOURCE = new BasicDataSource();
+        DATA_SOURCE.setDriverClassName(DRIVER);
+        DATA_SOURCE.setUrl(URL);
+        DATA_SOURCE.setUsername(USERNAME);
+        DATA_SOURCE.setPassword(PASSWORD);
+
     }
 
 
@@ -64,8 +76,6 @@ public class DatabaseHelper {
         } catch (SQLException e) {
             log.error("查询数据列表异常", e);
             throw new RuntimeException(e);
-        } finally {
-            closeConnection();
         }
         return entityList;
     }
@@ -87,8 +97,6 @@ public class DatabaseHelper {
         } catch (SQLException e) {
             log.error("查询数据对象异常", e);
             throw new RuntimeException(e);
-        } finally {
-            closeConnection();
         }
         return entity;
     }
@@ -108,8 +116,6 @@ public class DatabaseHelper {
         } catch (SQLException e) {
             log.error("执行联合查询异常", e);
             throw new RuntimeException(e);
-        } finally {
-            closeConnection();
         }
         return result;
     }
@@ -187,6 +193,20 @@ public class DatabaseHelper {
         return entityClass.getSimpleName();
     }
 
+    public static void exeuteSqlFile(String filePath) {
+        InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(filePath);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        try {
+            String sql;
+            while ((sql = reader.readLine()) != null) {
+                DatabaseHelper.executeUpdate(sql);
+            }
+        } catch (IOException e) {
+            log.error("执行sql文件异常", e);
+            throw new RuntimeException(e);
+        }
+    }
+
     /**
      * 执行通用更新(update,insert,delete)
      *
@@ -202,8 +222,6 @@ public class DatabaseHelper {
         } catch (SQLException e) {
             log.error("更新或删除异常", e);
             throw new RuntimeException(e);
-        } finally {
-            closeConnection();
         }
         return rows;
     }
@@ -218,9 +236,10 @@ public class DatabaseHelper {
         Connection con = CONNECTION_HOLDER.get();
         if (con == null) {
             try {
-                con = DriverManager.getConnection(URL, USERNAME, PASSWORD);
+                con = DATA_SOURCE.getConnection();
             } catch (SQLException e) {
                 log.error("获取数据库连接异常", e);
+                throw new RuntimeException(e);
             } finally {
                 CONNECTION_HOLDER.set(con);
             }
@@ -228,23 +247,5 @@ public class DatabaseHelper {
         return con;
     }
 
-
-    /**
-     * 关闭数据库连接
-     *
-     * @return
-     */
-    public static void closeConnection() {
-        Connection con = CONNECTION_HOLDER.get();
-        if (con != null) {
-            try {
-                con.close();
-            } catch (SQLException e) {
-                log.error("关闭数据库连接异常", e);
-            } finally {
-                CONNECTION_HOLDER.remove();
-            }
-        }
-    }
 
 }

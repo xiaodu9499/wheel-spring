@@ -3,8 +3,10 @@ package org.wspring.chapter2.service;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.wspring.chapter2.helper.DatabaseHelper;
 import org.wspring.chapter2.model.Customer;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,9 +25,14 @@ public class CustomerServiceTest {
         customerService = new CustomerService();
     }
 
+    /**
+     * 初始化数据库
+     *
+     * @throws IOException
+     */
     @Before
-    public void init() {
-        //todo 初始化数据库
+    public void init() throws IOException {
+        DatabaseHelper.exeuteSqlFile("sql/customer_init.sql");
     }
 
 
