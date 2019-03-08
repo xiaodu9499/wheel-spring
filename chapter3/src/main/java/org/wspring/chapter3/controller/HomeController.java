@@ -16,6 +16,10 @@ public class HomeController {
 
     @Action("get:/")
     public View welcome(Param param) {
+        return goHome();
+    }
+
+    private View goHome() {
         return new View("home.jsp");
     }
 

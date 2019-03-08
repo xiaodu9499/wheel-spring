@@ -3,9 +3,11 @@ package org.wheel.framework.helper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wheel.framework.annotation.Aspect;
+import org.wheel.framework.annotation.Service;
 import org.wheel.framework.proxy.AspectProxy;
 import org.wheel.framework.proxy.Proxy;
 import org.wheel.framework.proxy.ProxyManager;
+import org.wheel.framework.proxy.TransactionProxy;
 
 import java.lang.annotation.Annotation;
 import java.util.*;
@@ -63,6 +65,29 @@ public final class AopHelper {
      */
     private static Map<Class<?>, Set<Class<?>>> createProxyMap() throws Exception {
         HashMap<Class<?>, Set<Class<?>>> proxyMap = new HashMap<>();
+
+        addAspectProxy(proxyMap);
+        addTransactionProxy(proxyMap);
+        return proxyMap;
+    }
+
+    /**
+     * 事物注解类
+     *
+     * @param proxyMap
+     */
+    private static void addTransactionProxy(HashMap<Class<?>, Set<Class<?>>> proxyMap) {
+        Set<Class<?>> serviceClassSet = ClassHelper.getClassSetByAnnotation(Service.class);
+        proxyMap.put(TransactionProxy.class, serviceClassSet);
+    }
+
+    /**
+     * 切面代理类
+     *
+     * @param proxyMap
+     * @throws Exception
+     */
+    private static void addAspectProxy(HashMap<Class<?>, Set<Class<?>>> proxyMap) throws Exception {
         // 切面类必须实现AspectProxy
         Set<Class<?>> proxyClassSet = ClassHelper.getClassSetBySuper(AspectProxy.class);
         for (Class<?> proxyClass : proxyClassSet) {
@@ -74,7 +99,6 @@ public final class AopHelper {
                 proxyMap.put(proxyClass, targetClassSet);
             }
         }
-        return proxyMap;
     }
 
     /**
