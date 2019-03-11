@@ -5,7 +5,9 @@ import org.wheel.framework.bean.Handler;
 import org.wheel.framework.bean.Param;
 import org.wheel.framework.bean.View;
 import org.wheel.framework.helper.*;
-import org.wheel.framework.util.*;
+import org.wheel.framework.util.JsonUtil;
+import org.wheel.framework.util.ReflectionUtil;
+import org.wheel.framework.util.StringUtil;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
@@ -18,8 +20,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Method;
-import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -48,46 +48,51 @@ public class DispatcherServlet extends HttpServlet {
 
     @Override
     public void service(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        // 获取请求方法与请求路径
-        String requestMethod = req.getMethod().toLowerCase();
-        String requestPath = req.getPathInfo();
+        ServletHelper.init(req, res);
+        try {
+            // 获取请求方法与请求路径
+            String requestMethod = req.getMethod().toLowerCase();
+            String requestPath = req.getPathInfo();
 
-        if (requestPath.equals("/favicon.ico")) {
-            return;
-        }
+            if (requestPath.equals("/favicon.ico")) {
+                return;
+            }
 
-        // 获取Action处理器
-        Handler handler = ControllerHelper.getHandler(requestMethod, requestPath);
-        if (handler != null) {
-            // 获取Controller类机器Bean实例
-            Class<?> controllerClass = handler.getControllerClass();
-            Object controllerBean = BeanHelper.getBean(controllerClass);
-            // 创建请求参数对象
-            Param param;
-            if(Uploadhelper.isMultipart(req)){
-                param = Uploadhelper.createParam(req);
-            }else {
-                param = RequestHelper.createParam(req);
-            }
-            // 处理返回值
-            Object result;
-            Method actionMethod = handler.getActionMethod();
-            if (param.isEmpty()) {
-                // 无参函数
-                result = ReflectionUtil.invokeMethod(controllerBean, actionMethod);
-            } else {
-                // 有参函数
-                result = ReflectionUtil.invokeMethod(controllerBean, actionMethod, param);
-            }
-            // 处理返回值
-            if (result instanceof View) {
-                //返回视图对象
-                handleViewResult((View)result,req,res);
+            // 获取Action处理器
+            Handler handler = ControllerHelper.getHandler(requestMethod, requestPath);
+            if (handler != null) {
+                // 获取Controller类机器Bean实例
+                Class<?> controllerClass = handler.getControllerClass();
+                Object controllerBean = BeanHelper.getBean(controllerClass);
+                // 创建请求参数对象
+                Param param;
+                if (Uploadhelper.isMultipart(req)) {
+                    param = Uploadhelper.createParam(req);
+                } else {
+                    param = RequestHelper.createParam(req);
+                }
+                // 处理返回值
+                Object result;
+                Method actionMethod = handler.getActionMethod();
+                if (param.isEmpty()) {
+                    // 无参函数
+                    result = ReflectionUtil.invokeMethod(controllerBean, actionMethod);
+                } else {
+                    // 有参函数
+                    result = ReflectionUtil.invokeMethod(controllerBean, actionMethod, param);
+                }
+                // 处理返回值
+                if (result instanceof View) {
+                    //返回视图对象
+                    handleViewResult((View) result, req, res);
 
-            } else if (result instanceof Data) {
-                // 返回json数据
-                handleDataResult((Data)result,res);
+                } else if (result instanceof Data) {
+                    // 返回json数据
+                    handleDataResult((Data) result, res);
+                }
             }
+        } finally {
+            ServletHelper.destory();
         }
     }
 
