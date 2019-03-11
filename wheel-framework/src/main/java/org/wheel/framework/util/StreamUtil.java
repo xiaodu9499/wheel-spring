@@ -3,10 +3,7 @@ package org.wheel.framework.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 
 /**
  * DESCRIPTION : 流操作工具类
@@ -39,4 +36,29 @@ public final class StreamUtil {
         return sb.toString();
     }
 
+    /**
+     * 将输入流复制到输出流
+     *
+     * @param inputStream
+     * @param outputStream
+     */
+    public static void copyStream(InputStream inputStream, OutputStream outputStream) {
+        try {
+            int length;
+            byte[] buffer = new byte[4 * 1024];
+            while ((length = inputStream.read(buffer, 0, buffer.length)) != -1) {
+                outputStream.write(buffer, 0, length);
+            }
+        } catch (Exception e) {
+            log.error(" 输入流转输出流失败", e);
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                inputStream.close();
+                outputStream.close();
+            } catch (Exception e) {
+                log.error(" 流关闭失败", e);
+            }
+        }
+    }
 }
