@@ -1,4 +1,6 @@
-# wheel-spring: 重复造轮子
+# wheel-spring: 
+
+模仿smart4j
 
 ioc功能
 
